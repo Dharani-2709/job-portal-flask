@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+  <div class="card shadow p-4" style="width: 100%; max-width: 700px; border-radius: 20px;">
+    <h3 class="text-center text-primary mb-4">{{ session['username'] }}'s Profile</h3>
+
+    <!-- Begin Form -->
+    <form method="POST" enctype="multipart/form-data">
+
+      <!-- ✅ Profile Image Upload + Preview INSIDE the form now -->
+      <div class="text-center mb-4">
+        <label for="profileImageInput" style="cursor: pointer;">
+          <img id="previewImage"
+               src="{% if user.profile_image %}{{ url_for('static', filename='profile_images/' + user.profile_image) }}{% else %}https://via.placeholder.com/150{% endif %}"
+               class="rounded-circle border shadow"
+               style="width: 150px; height: 150px; object-fit: cover;"
+               alt="Profile Image">
+        </label>
+        <input type="file" id="profileImageInput" name="profile_image" accept="image/*" class="d-none">
+      </div>
+
+      <!-- Editable Fields -->
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" value="{{ user.email or '' }}" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Qualification</label>
+        <input type="text" name="qualification" value="{{ user.qualification or '' }}" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Projects</label>
+        <input type="text" name="projects" value="{{ user.projects or '' }}" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">LinkedIn</label>
+        <input type="url" name="linkedin" value="{{ user.linkedin or '' }}" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">CGPA</label>
+        <input type="text" name="cgpa" value="{{ user.cgpa or '' }}" class="form-control">
+      </div>
+
+      <!-- Resume Display -->
+      <div class="mb-3">
+        {% if user.resume %}
+          <strong>Resume:</strong>
+          <a href="{{ url_for('download_resume', filename=user.resume) }}" target="_blank" class="text-decoration-none">
+            {{ user.resume }}
+          </a>
+        {% else %}
+          <p>No resume uploaded.</p>
+        {% endif %}
+      </div>
+
+      <!-- Resume Upload -->
+      <div class="mb-3">
+        <label class="form-label">Upload Resume</label>
+        <input type="file" name="resume" class="form-control w-75" accept=".pdf,.doc,.docx">
+      </div>
+
+      <!-- Submit Button -->
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary px-4">Update Profile</button>
+      </div>
+
+    </form>
+    <!-- End Form -->
+
+  </div>
+</div>
+
+<!-- JS to Preview Profile Image -->
+<script>
+  const profileInput = document.getElementById('profileImageInput');
+  const previewImage = document.getElementById('previewImage');
+
+  profileInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      previewImage.src = URL.createObjectURL(file);
+    }
+  });
+</script>
+{% endblock %}

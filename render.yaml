@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: job-portal-flask
+    env: python
+    buildCommand: "pip install -r 'job_portal/requirements.txt'"
+    startCommand: "gunicorn main:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production

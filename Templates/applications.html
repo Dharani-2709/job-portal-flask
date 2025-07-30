@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Applications for {{ job.title }}</h2>
+
+{% if applications %}
+    {% for app in applications %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ app.seeker.username }}</h5>
+                <p><strong>Email:</strong> {{ app.email }}</p>
+                <p><strong>Phone:</strong> {{ app.phone }}</p>
+                <p><strong>Location:</strong> {{ app.location }}</p>
+                {% if app.resume_filename %}
+                    <a href="{{ url_for('download_resume', filename=app.resume_filename) }}" class="btn btn-primary btn-sm">Download Resume</a>
+                {% else %}
+                    <p>No resume uploaded.</p>
+                {% endif %}
+                <p class="text-muted"><small>Applied on: {{ app.timestamp.strftime('%Y-%m-%d %H:%M') }}</small></p>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No applications yet.</p>
+{% endif %}
+{% endblock %}

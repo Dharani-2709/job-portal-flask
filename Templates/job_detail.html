@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body">
+            <h2 class="card-title text-primary">{{ job.title }}</h2>
+            <h5 class="card-subtitle text-muted mb-3">{{ job.company }} | {{ job.location }}</h5>
+
+            <p class="mb-2"><strong>💰 Salary:</strong> ₹{{ job.salary }}</p>
+            {% if job.expiration_date %}
+                <p class="mb-2"><strong>📅 Expiration Date:</strong> {{ job.expiration_date.strftime('%d %b %Y') }}</p>
+            {% endif %}
+            <hr>
+            <p class="mb-4">{{ job.description }}</p>
+
+            {% if job.expiration_date and job.expiration_date < current_date %}
+                <div class="alert alert-danger text-center">
+                    ❌ This job has expired.
+                </div>
+                {% if session.get('role') == 'seeker' %}
+                    <button class="btn btn-secondary me-2" disabled>Apply Now</button>
+                    <button class="btn btn-secondary" disabled>Save Job</button>
+                {% endif %}
+            {% else %}
+                {% if session.get('role') == 'seeker' %}
+                    {% if already_applied %}
+                        <div class="alert alert-info">
+                            ✅ You have already applied for this job.
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn btn-success me-2">Apply Now</a>
+                        <a href="{{ url_for('save_job', job_id=job.id) }}" class="btn btn-warning">Save Job</a>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mt-4">Your Dashboard ({{ role | capitalize }})</h2>
+
+{% if role == 'employer' %}
+    <a href="{{ url_for('post_job') }}" class="btn btn-success mb-4">Post New Job</a>
+
+    {% if jobs %}
+        {% for job in jobs %}
+            <div class="card shadow-lg mb-5 border-0 rounded-4">
+                <div class="card-body">
+                    <h4 class="card-title text-primary">
+                        {{ job.title }}
+                        {% if job.expiration_date and job.expiration_date < current_date %}
+                            <span class="badge bg-danger">Expired</span>
+                        {% endif %}
+                    </h4>
+                    <h6 class="card-subtitle text-muted mb-2">{{ job.company }} | {{ job.location }} | ₹{{ job.salary }}</h6>
+                    <p class="mb-3">{{ job.description[:150] }}...</p>
+
+                    {% if job.applications %}
+                        <h6 class="mt-4">Applicants:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for app in job.applications %}
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="me-3">
+                                        <p class="mb-1">📧 <strong>Email:</strong> {{ app.email }}</p>
+                                        <p class="mb-1">📞 <strong>Phone:</strong> {{ app.phone }}</p>
+                                        <p class="mb-1">📍 <strong>Location:</strong> {{ app.location }}</p>
+                                    </div>
+                                    <div>
+                                        {% if app.resume_filename %}
+                                            <a href="{{ url_for('download_resume', filename=app.resume_filename) }}" class="btn btn-outline-primary btn-sm">Download Resume</a>
+                                        {% else %}
+                                            <span class="text-muted">No Resume</span>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mt-2">No applicants yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">You haven't posted any jobs yet.</p>
+    {% endif %}
+
+{% else %}
+    <!-- Tabs for seekers -->
+    <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="applied-tab" data-bs-toggle="tab" href="#applied" role="tab">Applied Jobs</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="saved-tab" data-bs-toggle="tab" href="#saved" role="tab">Saved Jobs</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- Applied Jobs -->
+        <div class="tab-pane fade show active" id="applied" role="tabpanel">
+            {% if applications %}
+                {% for application in applications %}
+                    <div class="card shadow-sm mb-4 border-0 rounded-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ application.job.title }}
+                                {% if application.job.expiration_date and application.job.expiration_date < current_date %}
+                                    <span class="badge bg-danger">Expired</span>
+                                {% endif %}
+                            </h5>
+                            <h6 class="card-subtitle text-muted mb-2">{{ application.job.company }} | {{ application.job.location }} | ₹{{ application.job.salary }}</h6>
+                            <p class="mb-2">{{ application.job.description[:150] }}...</p>
+                            <p class="text-muted small">🕒 Applied on: {{ application.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">You haven’t applied to any jobs yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Saved Jobs -->
+        <div class="tab-pane fade" id="saved" role="tabpanel">
+            {% if saved_jobs %}
+                {% for saved in saved_jobs %}
+                    <div class="card shadow-sm mb-4 border-0 rounded-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ saved.job.title }}
+                                {% if saved.job.expiration_date and saved.job.expiration_date < current_date %}
+                                    <span class="badge bg-danger">Expired</span>
+                                {% endif %}
+                            </h5>
+                            <h6 class="card-subtitle text-muted mb-2">{{ saved.job.company }} | {{ saved.job.location }} | ₹{{ saved.job.salary }}</h6>
+                            <p class="mb-2">{{ saved.job.description[:150] }}...</p>
+                            <p class="text-muted small">📌 Saved on: {{ saved.saved_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">You haven’t saved any jobs yet.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

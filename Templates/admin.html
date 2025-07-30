@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <!-- Users List -->
+    <h4 class="text-primary">👥 Users</h4>
+    <ul class="list-group mb-5">
+        {% for user in users %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ user.username }}</span>
+                <span class="badge bg-secondary">{{ user.role | capitalize }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Jobs List -->
+    <h4 class="text-primary">💼 Jobs</h4>
+    <div class="mb-5">
+        {% if jobs %}
+            {% for job in jobs %}
+                <div class="card shadow-sm mb-3 border-0 rounded-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {{ job.title }}
+                            {% if job.expiration_date and job.expiration_date < current_date %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </h5>
+                        <h6 class="card-subtitle text-muted mb-2">{{ job.company }} | {{ job.location }} | ₹{{ job.salary }}</h6>
+                        <p>{{ job.description[:150] }}...</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No jobs found.</p>
+        {% endif %}
+    </div>
+
+    <!-- Applications List -->
+    <h4 class="text-primary">📄 Applications</h4>
+    <ul class="list-group">
+        {% for app in applications %}
+            <li class="list-group-item">
+                <strong>Job:</strong> {{ app.job.title }} |
+                <strong>Seeker:</strong> {{ app.seeker.username }} |
+                <strong>Email:</strong> {{ app.email }} |
+                <strong>Phone:</strong> {{ app.phone }}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
