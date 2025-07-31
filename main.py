@@ -155,7 +155,7 @@ def job_detail(job_id):
         already_applied = Application.query.filter_by(
             job_id=job.id, seeker_id=session['user_id']).first() is not None
 
-    return render_template('job_detail.html', job=job, already_applied=already_applied, is_expired=is_expired,current_date=date.today())
+    return render_template('job_detail.html', job=job, already_applied=already_applied, is_expired=is_expired, current_date=date.today())
 
 @app.route('/apply/<int:job_id>', methods=['GET', 'POST'])
 def apply_job(job_id):
@@ -319,5 +319,10 @@ def admin_panel():
 
     return render_template('admin.html', users=users, jobs=jobs, applications=applications, current_date=date.today())
 
+# ✅ Final Fallback for Render: Create DB if not exists
 if __name__ == "__main__":
+    with app.app_context():
+        if not os.path.exists(os.path.join("instance", "jobportal.db")):
+            db.create_all()
+            print("✅ Database created using db.create_all()")
     app.run(debug=True)
