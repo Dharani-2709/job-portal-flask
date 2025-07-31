@@ -106,11 +106,18 @@ services:
 Place your screenshots in the `/screenshots/` folder and link them here:
 
 - 🏠 Home Page  
-- 🔐 Login Page  
+![home.png](screenshots/home.png)
+- 🔐 Login Page 
+![login.png](screenshots/login.png)
 - 📝 Register Page  
+![register.png](screenshots/register.png)
 - 👤 Profile Page  
-- 💼 Dashboard (Seeker & Employer)  
-- 🗂 Admin Panel  
+![profile.png](screenshots/profile.png)
+- 💼 Dashboard (Seeker)  
+![dashboard.png](screenshots/dashboard.png)
+- 💼 Dashboard (Employer)
+![e_dashboard.png](screenshots/e_dashboard.png)
+
 
 ---
 
