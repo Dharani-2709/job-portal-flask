@@ -1,22 +1,28 @@
 # Ignore virtual environment
-../.venv/
-venv/
 .venv/
+venv/
+../.venv/     # Optional: only if you sometimes activate one level up
 
-# Ignore database
-job_portal/instance/jobportal.db
-instance/
+# Ignore Python cache
 __pycache__/
 *.pyc
 
-# Ignore user uploads
-job_portal/static/resumes/
-job_portal/static/profile_images/
+# Ignore Flask database and instance
+instance/
+*.db
+*.sqlite3
+
+# Ignore user-uploaded files
+static/resumes/
+static/profile_images/
 uploads/
 
-# Ignore system files
+# Ignore local Flask environment file
+.flaskenv
+
+# Ignore system/IDE files
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
 
-# Ignore local Flask environment config
-.flaskenv
