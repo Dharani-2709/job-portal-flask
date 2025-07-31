@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4 p-4">
+        <h2 class="mb-4 text-primary text-center">📢 Post a New Job</h2>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form.title.label(class="form-label") }}
+                    {{ form.title(class="form-control form-control-lg") }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.company.label(class="form-label") }}
+                    {{ form.company(class="form-control form-control-lg") }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.location.label(class="form-label") }}
+                    {{ form.location(class="form-control form-control-lg") }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form.salary.label(class="form-label") }}
+                    {{ form.salary(class="form-control form-control-lg") }}
+                </div>
+
+                {% if form.expiration_date %}
+                <div class="col-md-6">
+                    {{ form.expiration_date.label(class="form-label") }}
+                    {{ form.expiration_date(class="form-control form-control-lg") }}
+                </div>
+                {% endif %}
+
+                <div class="col-12">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control", rows="5") }}
+                </div>
+            </div>
+
+            <div class="text-end mt-4">
+                {{ form.submit(class="btn btn-success px-4 py-2") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

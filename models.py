@@ -24,7 +24,8 @@ class Job(db.Model):
     location = db.Column(db.String(100))
     company = db.Column(db.String(100))
     posted_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    expiration_date = db.Column(db.Date, nullable=True)  # ✅ Already good
+    expiration_date = db.Column(db.Date, nullable=True)
+    posted_on = db.Column(db.DateTime, default=datetime.utcnow)  # ✅ Added line
 
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)

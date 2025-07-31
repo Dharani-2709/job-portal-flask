@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">📊 {{ role | capitalize }} Dashboard</h2>
+        {% if role == 'employer' %}
+            <a href="{{ url_for('post_job') }}" class="btn btn-outline-primary mt-3">➕ Post New Job</a>
+        {% endif %}
+    </div>
+
+    {% if role == 'employer' %}
+        {% if jobs %}
+        <div class="table-responsive shadow rounded-4 overflow-hidden">
+            <table class="table table-striped align-middle mb-0">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Applicants</th>
+                        <th>Status</th>
+                        <th>Posted</th>
+                        <th>Expires</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>
+                            <strong>{{ job.title }}</strong><br>
+                            <small class="text-muted">{{ job.company }} | {{ job.location }}</small>
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('view_applications', job_id=job.id) }}" class="text-decoration-none">
+                                <span class="badge bg-primary">{{ job.applications|length }} Applied</span>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            {% if job.expiration_date and job.expiration_date < current_date %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% else %}
+                                <span class="badge bg-success">Active</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ job.posted_on.strftime('%Y-%m-%d') if job.posted_on else 'N/A' }}</td>
+                        <td class="text-center">{{ job.expiration_date.strftime('%Y-%m-%d') if job.expiration_date else 'N/A' }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('edit_job', job_id=job.id) }}" class="btn btn-sm btn-warning">✏️</a>
+                            <a href="{{ url_for('delete_job', job_id=job.id) }}" class="btn btn-sm btn-danger"
+                               onclick="return confirm('Are you sure?')">🗑️</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-muted">You haven’t posted any jobs yet.</p>
+        {% endif %}
+
+    {% else %}
+    <!-- Job Seeker View -->
+    <ul class="nav nav-pills mb-4 justify-content-center" id="dashboardTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="applied-tab" data-bs-toggle="tab" href="#applied" role="tab">📝 Applied Jobs</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="saved-tab" data-bs-toggle="tab" href="#saved" role="tab">🔖 Saved Jobs</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- Applied Jobs Tab -->
+        <div class="tab-pane fade show active" id="applied" role="tabpanel">
+            {% if applications %}
+                {% for application in applications %}
+                <div class="card shadow-sm border-0 mb-4 rounded-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ application.job.title }}
+                            {% if application.job.expiration_date and application.job.expiration_date < current_date %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </h5>
+                        <h6 class="text-muted mb-2">{{ application.job.company }} | {{ application.job.location }} | ₹{{ application.job.salary }}</h6>
+                        <p>{{ application.job.description[:150] }}...</p>
+                        <p class="text-muted small">🕒 Applied on: {{ application.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">You haven’t applied to any jobs yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Saved Jobs Tab -->
+        <div class="tab-pane fade" id="saved" role="tabpanel">
+            {% if saved_jobs %}
+                {% for saved in saved_jobs %}
+                <div class="card shadow-sm border-0 mb-4 rounded-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ saved.job.title }}
+                            {% if saved.job.expiration_date and saved.job.expiration_date < current_date %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </h5>
+                        <h6 class="text-muted mb-2">{{ saved.job.company }} | {{ saved.job.location }} | ₹{{ saved.job.salary }}</h6>
+                        <p>{{ saved.job.description[:150] }}...</p>
+                        <p class="text-muted small">📌 Saved on: {{ saved.saved_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">You haven’t saved any jobs yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,8 +1,11 @@
 # Ignore virtual environment
 ../.venv/
+venv/
+.venv/
 
 # Ignore database
 job_portal/instance/jobportal.db
+instance/
 __pycache__/
 *.pyc
 
@@ -10,8 +13,10 @@ __pycache__/
 job_portal/static/resumes/
 job_portal/static/profile_images/
 uploads/
-instance/
 
 # Ignore system files
 .DS_Store
 Thumbs.db
+
+# Ignore local Flask environment config
+.flaskenv

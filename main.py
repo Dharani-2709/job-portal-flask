@@ -1,47 +1,35 @@
 from flask import Flask, render_template, redirect, url_for, flash, request, session, send_from_directory
+from forms import RegisterForm, LoginForm, JobForm
+from models import db, User, Job, Application, SavedJob
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from flask_migrate import Migrate
 from datetime import date
 import os
 
-from models import db, User, Job, Application, SavedJob
-from forms import RegisterForm, LoginForm, JobForm
-
-# ------------------- App Configuration -------------------
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/jobportal.db'
+app.config['SECRET_KEY'] = 'secretkey'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jobportal.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-UPLOAD_FOLDER = 'static/uploads'
-RESUME_FOLDER = 'static/resumes'
-PROFILE_IMAGE_FOLDER = 'static/profile_images'
+# Upload folders
+app.config['RESUME_FOLDER'] = os.path.join('static', 'resumes')
+os.makedirs(app.config['RESUME_FOLDER'], exist_ok=True)
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['RESUME_FOLDER'] = RESUME_FOLDER
-app.config['PROFILE_IMAGE_FOLDER'] = PROFILE_IMAGE_FOLDER
+app.config['PROFILE_IMAGE_FOLDER'] = os.path.join('static', 'profile_images')
+os.makedirs(app.config['PROFILE_IMAGE_FOLDER'], exist_ok=True)
 
-# Create folders if not exist
-os.makedirs('instance', exist_ok=True)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(RESUME_FOLDER, exist_ok=True)
-os.makedirs(PROFILE_IMAGE_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = app.config['RESUME_FOLDER']
 
-# ------------------- Database Init -------------------
-
+# Initialize DB and Migration
 db.init_app(app)
-
-with app.app_context():
-    if not os.path.exists("instance/jobportal.db"):
-        db.create_all()
-
-# ------------------- Routes -------------------
+migrate = Migrate(app, db)
 
 @app.route('/')
 def index():
     role = request.args.get('role', '').lower()
     location = request.args.get('location', '').lower()
+
     today = date.today()
     jobs = Job.query.filter((Job.expiration_date == None) | (Job.expiration_date >= today))
 
@@ -101,14 +89,14 @@ def profile():
         profile_image = request.files.get('profile_image')
         if profile_image and profile_image.filename:
             filename = secure_filename(profile_image.filename)
-            filepath = os.path.join(PROFILE_IMAGE_FOLDER, filename)
+            filepath = os.path.join(app.config['PROFILE_IMAGE_FOLDER'], filename)
             profile_image.save(filepath)
             user.profile_image = filename
 
         resume_file = request.files.get('resume')
         if resume_file and resume_file.filename:
             filename = secure_filename(resume_file.filename)
-            filepath = os.path.join(RESUME_FOLDER, filename)
+            filepath = os.path.join(app.config['RESUME_FOLDER'], filename)
             resume_file.save(filepath)
             user.resume = filename
 
@@ -120,7 +108,7 @@ def profile():
 
 @app.route('/resume/<filename>')
 def download_resume(filename):
-    return send_from_directory(RESUME_FOLDER, filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/dashboard')
 def dashboard():
@@ -161,11 +149,13 @@ def post_job():
 def job_detail(job_id):
     job = Job.query.get_or_404(job_id)
     is_expired = job.expiration_date and job.expiration_date < date.today()
+
     already_applied = False
     if 'user_id' in session and session.get('role') == 'seeker':
         already_applied = Application.query.filter_by(
             job_id=job.id, seeker_id=session['user_id']).first() is not None
-    return render_template('job_detail.html', job=job, already_applied=already_applied, is_expired=is_expired)
+
+    return render_template('job_detail.html', job=job, already_applied=already_applied, is_expired=is_expired,current_date=date.today())
 
 @app.route('/apply/<int:job_id>', methods=['GET', 'POST'])
 def apply_job(job_id):
@@ -189,7 +179,7 @@ def apply_job(job_id):
         filename = None
         if resume and resume.filename != '':
             filename = secure_filename(resume.filename)
-            resume.save(os.path.join(RESUME_FOLDER, filename))
+            resume.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             user.resume = filename
             db.session.commit()
         elif user.resume:
@@ -253,7 +243,9 @@ def search_jobs():
     if min_salary is not None:
         query = query.filter(Job.salary >= min_salary)
 
-    jobs = query.all()
+    today = date.today()
+    jobs = query.filter((Job.expiration_date == None) | (Job.expiration_date >= today)).all()
+
     return render_template('search_results.html', jobs=jobs)
 
 @app.route('/applications/<int:job_id>')
@@ -263,12 +255,57 @@ def view_applications(job_id):
         return redirect(url_for('login'))
 
     job = Job.query.get_or_404(job_id)
+
     if job.posted_by != session['user_id']:
         flash('Access denied.', 'danger')
         return redirect(url_for('dashboard'))
 
     applications = Application.query.filter_by(job_id=job.id).all()
     return render_template('applications.html', job=job, applications=applications)
+
+@app.route('/edit-job/<int:job_id>', methods=['GET', 'POST'])
+def edit_job(job_id):
+    if 'user_id' not in session or session.get('role') != 'employer':
+        flash("Access denied.", "danger")
+        return redirect(url_for('login'))
+
+    job = Job.query.get_or_404(job_id)
+    if job.posted_by != session['user_id']:
+        flash("You can only edit your own jobs.", "danger")
+        return redirect(url_for('dashboard'))
+
+    form = JobForm(obj=job)
+
+    if form.validate_on_submit():
+        job.title = form.title.data
+        job.description = form.description.data
+        job.location = form.location.data
+        job.company = form.company.data
+        job.salary = form.salary.data
+        job.expiration_date = form.expiration_date.data
+        db.session.commit()
+
+        flash("Job updated successfully!", "success")
+        return redirect(url_for('dashboard'))
+
+    return render_template('edit_job.html', form=form, job=job)
+
+@app.route('/delete-job/<int:job_id>')
+def delete_job(job_id):
+    if 'user_id' not in session or session.get('role') != 'employer':
+        flash("Access denied.", "danger")
+        return redirect(url_for('login'))
+
+    job = Job.query.get_or_404(job_id)
+    if job.posted_by != session['user_id']:
+        flash("You can only delete your own jobs.", "danger")
+        return redirect(url_for('dashboard'))
+
+    Application.query.filter_by(job_id=job.id).delete()
+    db.session.delete(job)
+    db.session.commit()
+    flash("Job deleted successfully!", "success")
+    return redirect(url_for('dashboard'))
 
 @app.route('/admin')
 def admin_panel():
@@ -279,9 +316,8 @@ def admin_panel():
     users = User.query.all()
     jobs = Job.query.all()
     applications = Application.query.all()
-    return render_template('admin.html', users=users, jobs=jobs, applications=applications, current_date=date.today())
 
-# ------------------- Run -------------------
+    return render_template('admin.html', users=users, jobs=jobs, applications=applications, current_date=date.today())
 
 if __name__ == "__main__":
     app.run(debug=True)
