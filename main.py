@@ -25,6 +25,13 @@ app.config['UPLOAD_FOLDER'] = app.config['RESUME_FOLDER']
 db.init_app(app)
 migrate = Migrate(app, db)
 
+# ✅ Ensure DB exists with tables before first request (safe for Render)
+with app.app_context():
+    if not os.path.exists(os.path.join("instance", "jobportal.db")):
+        db.create_all()
+        print("✅ Database created using db.create_all()")
+
+
 @app.route('/')
 def index():
     role = request.args.get('role', '').lower()
@@ -319,10 +326,5 @@ def admin_panel():
 
     return render_template('admin.html', users=users, jobs=jobs, applications=applications, current_date=date.today())
 
-# ✅ Final Fallback for Render: Create DB if not exists
 if __name__ == "__main__":
-    with app.app_context():
-        if not os.path.exists(os.path.join("instance", "jobportal.db")):
-            db.create_all()
-            print("✅ Database created using db.create_all()")
     app.run(debug=True)
